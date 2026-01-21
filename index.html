@@ -1,507 +1,255 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <!-- iPadで画面いっぱい＋ノッチ/ホームバー対策 -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta charset="UTF-8">
 
-  <!-- iPadホーム画面に追加したときアプリっぽく全画面 -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- iPad 全画面対応 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <title>ベルハーモニー</title>
-  <link href="https://fonts.googleapis.com/css2?family=Rounded+Mplus+1c:wght@400;700&display=swap" rel="stylesheet">
+<title>ベルハーモニー</title>
 
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-      background: #111;
-      font-family: 'Rounded Mplus 1c', sans-serif;
-    }
-    * { box-sizing: border-box; }
+<link href="https://fonts.googleapis.com/css2?family=Rounded+Mplus+1c:wght@400;700&display=swap" rel="stylesheet">
 
-    /* iOSの安全領域（ノッチ/ホームバー） */
-    body {
-      padding: env(safe-area-inset-top)
-               env(safe-area-inset-right)
-               env(safe-area-inset-bottom)
-               env(safe-area-inset-left);
-      /* 誤操作（ダブルタップ拡大等）を減らす */
-      touch-action: manipulation;
-      -webkit-user-select: none;
-      user-select: none;
-    }
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
 
-    .app-container {
-      width: 100%;
-      height: 100%;
-      min-height: 100svh; /* iOS Safari対策 */
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 16px;
-      gap: 12px;
-    }
+body {
+  font-family: 'Rounded Mplus 1c', sans-serif;
+  background: #111;
+  padding:
+    env(safe-area-inset-top)
+    env(safe-area-inset-right)
+    env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+  touch-action: manipulation;
+  user-select: none;
+}
 
-    .title {
-      font-size: clamp(28px, 3.6vw, 56px);
-      font-weight: 700;
-      color: #ffffff;
-      margin: 0;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.35);
-      letter-spacing: 0.02em;
-    }
+* { box-sizing: border-box; }
 
-    .controls {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-      width: min(980px, 100%);
-    }
+.app-container {
+  width: 100%;
+  height: 100%;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 16px;
+}
 
-    .mode-button {
-      padding: 12px 18px;
-      font-size: 16px;
-      font-weight: 700;
-      border: none;
-      border-radius: 999px;
-      cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
-      font-family: 'Rounded Mplus 1c', sans-serif;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-      white-space: nowrap;
-    }
-    .mode-button:active { transform: scale(0.97); }
-    .mode-button:hover { filter: brightness(1.03); }
+.title {
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 16px;
+}
 
-    .mode-button.free { background: #ffffff; color: #667eea; }
-    .mode-button.practice { background: #ffd700; color: #333333; }
-    .mode-button.demo { background: #00e5ff; color: #00303a; }
-    .mode-button.stop { background: #ff5a5f; color: #ffffff; }
+.controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 12px;
+}
 
-    .mode-button.active {
-      transform: scale(1.03);
-      box-shadow: 0 8px 20px rgba(255,255,255,0.22);
-    }
+.mode-button {
+  padding: 12px 20px;
+  border-radius: 999px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
 
-    .practice-info {
-      color: #ffffff;
-      font-size: clamp(14px, 1.8vw, 20px);
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.35);
-      text-align: center;
-      width: min(980px, 100%);
-      min-height: 1.4em;
-    }
+.mode-button.free { background:#fff; color:#667eea; }
+.mode-button.demo { background:#ff69b4; color:#fff; }
+.mode-button.beginner { background:#90ee90; }
+.mode-button.practice { background:#ffd700; }
 
-    /* 横持ち（iPadランドスケープ）でベルを大きくして余白減らす */
-    .bells-container {
-      width: min(980px, 100%);
-      display: grid;
-      gap: clamp(10px, 1.6vw, 18px);
-      justify-content: center;
-      align-content: center;
-      /* 画面サイズに応じて自動で列数調整 */
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    }
+.mode-button.active {
+  box-shadow: 0 0 12px rgba(255,255,255,0.6);
+}
 
-    .bell {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 5 / 7; /* 見た目を維持して伸縮 */
-      cursor: pointer;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+.practice-info {
+  color: #fff;
+  margin-bottom: 10px;
+}
 
-    .bell-body {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
+.bells-container {
+  width: min(1000px, 100%);
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 14px;
+}
 
-    .bell-top {
-      width: 28%;
-      height: 11%;
-      background: #8b7355;
-      border-radius: 999px 999px 0 0;
-      margin-bottom: -6px;
-      z-index: 2;
-    }
+.bell {
+  aspect-ratio: 5 / 7;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-    .bell-shape {
-      width: 78%;
-      height: 70%;
-      border-radius: 42% 42% 50% 50%;
-      box-shadow:
-        0 10px 22px rgba(0,0,0,0.30),
-        inset -6px -6px 16px rgba(0,0,0,0.22),
-        inset 6px 6px 16px rgba(255,255,255,0.25);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      transform-origin: center top;
-    }
+.bell-shape {
+  width: 100%;
+  height: 100%;
+  border-radius: 40% 40% 50% 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: gold;
+  transition: 0.3s;
+}
 
-    .bell-shape.ringing { animation: ring 0.24s ease-in-out; }
-    .bell-shape.highlight {
-      animation: glow 0.85s ease-in-out infinite;
-      box-shadow:
-        0 0 32px rgba(255,255,255,0.90),
-        0 10px 22px rgba(0,0,0,0.30),
-        inset -6px -6px 16px rgba(0,0,0,0.22),
-        inset 6px 6px 16px rgba(255,255,255,0.25);
-    }
+.bell-shape.highlight {
+  filter: brightness(1.8);
+  transform: scale(1.1);
+}
 
-    @keyframes ring {
-      0%, 100% { transform: rotate(0deg) scale(1); }
-      25% { transform: rotate(-9deg) scale(1.02); }
-      75% { transform: rotate(9deg) scale(1.02); }
-    }
-
-    @keyframes glow {
-      0%, 100% { filter: brightness(1.45); transform: scale(1.05); }
-      50% { filter: brightness(1.8); transform: scale(1.10); }
-    }
-
-    .bell-note {
-      font-size: clamp(22px, 3vw, 34px);
-      font-weight: 700;
-      color: #8b4513;
-      text-shadow: 1px 1px 2px rgba(255,255,255,0.55);
-    }
-
-    .bell-label {
-      font-size: clamp(12px, 1.6vw, 16px);
-      font-weight: 700;
-      color: #ffffff;
-      text-shadow: 1px 1px 2px rgba(0,0,0,0.55);
-      letter-spacing: 0.06em;
-    }
-
-    /* さらに横長のとき：7個が気持ちよく並ぶように */
-    @media (min-width: 900px) and (orientation: landscape) {
-      .bells-container {
-        grid-template-columns: repeat(7, minmax(110px, 1fr));
-      }
-    }
-  </style>
+.bell-shape.dimmed {
+  opacity: 0.3;
+}
+</style>
 </head>
 
 <body>
-  <div class="app-container">
-    <h1 class="title" id="title">ベルハーモニー</h1>
+<div class="app-container">
+  <h1 class="title">ベルハーモニー</h1>
 
-    <div class="controls">
-      <button class="mode-button free active" id="freeMode">自由演奏</button>
-      <button class="mode-button practice" id="practiceMode">きらきら星を練習（待ちつき）</button>
-      <button class="mode-button demo" id="demoPlay">デモ演奏（きらきら星）</button>
-      <button class="mode-button stop" id="stopAll">停止</button>
-    </div>
-
-    <div class="practice-info" id="practiceInfo" style="display:none;"></div>
-    <div class="bells-container" id="bellsContainer"></div>
+  <div class="controls">
+    <button class="mode-button free active" id="freeMode">自由演奏</button>
+    <button class="mode-button demo" id="demoMode">デモ</button>
+    <button class="mode-button beginner" id="beginnerMode">初級</button>
+    <button class="mode-button practice" id="practiceMode">中級</button>
   </div>
 
-  <script>
-    const notes = [
-      { note: 'ド', frequency: 261.63, label: 'C', color: '#ff4444' },
-      { note: 'レ', frequency: 293.66, label: 'D', color: '#ff8833' },
-      { note: 'ミ', frequency: 329.63, label: 'E', color: '#ffdd33' },
-      { note: 'ファ', frequency: 349.23, label: 'F', color: '#44dd44' },
-      { note: 'ソ', frequency: 392.00, label: 'G', color: '#3399ff' },
-      { note: 'ラ', frequency: 440.00, label: 'A', color: '#4488ff' },
-      { note: 'シ', frequency: 493.88, label: 'B', color: '#ff66cc' }
-    ];
+  <div class="practice-info" id="practiceInfo" style="display:none"></div>
+  <div class="bells-container" id="bellsContainer"></div>
+</div>
 
-    // きらきら星（ド・ド・ソ…）
-    const twinkleSong = [
-      'ド', 'ド', 'ソ', 'ソ', 'ラ', 'ラ', 'ソ',
-      'ファ', 'ファ', 'ミ', 'ミ', 'レ', 'レ', 'ド',
-      'ソ', 'ソ', 'ファ', 'ファ', 'ミ', 'ミ', 'レ',
-      'ソ', 'ソ', 'ファ', 'ファ', 'ミ', 'ミ', 'レ',
-      'ド', 'ド', 'ソ', 'ソ', 'ラ', 'ラ', 'ソ',
-      'ファ', 'ファ', 'ミ', 'ミ', 'レ', 'レ', 'ド'
-    ];
+<script>
+/* ========= AudioContext（iOS対策） ========= */
+let audioContext;
+function initAudio() {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioContext.state === 'suspended') {
+    audioContext.resume();
+  }
+}
+window.addEventListener('pointerdown', initAudio, { once:true });
 
-    // ===== 状態 =====
-    let practiceMode = false;
-    let currentNoteIndex = 0;
-    let bellElements = {};
-    let audioContext;
+/* ========= データ ========= */
+const notes = [
+  { note:'ド', freq:261.63 },
+  { note:'レ', freq:293.66 },
+  { note:'ミ', freq:329.63 },
+  { note:'ファ', freq:349.23 },
+  { note:'ソ', freq:392.00 },
+  { note:'ラ', freq:440.00 },
+  { note:'シ', freq:493.88 }
+];
 
-    // 同時押し（和音）対応：pointerIdごとに押下中ノートを保持
-    const activePointers = new Map();
+const twinkle = [
+ 'ド','ド','ソ','ソ','ラ','ラ','ソ',
+ 'ファ','ファ','ミ','ミ','レ','レ','ド'
+];
 
-    // 自動演奏/デモ用
-    let autoplayTimer = null;
-    let autoplayIndex = 0;
-    let isAutoplay = false;
+let mode = 'free';
+let index = 0;
+let bells = {};
+let timer = null;
 
-    // 練習（待ちつき）：次の音を光らせてから「待つ」時間（ms）
-    const PRACTICE_WAIT_MS = 1200;
-    // デモ/自動演奏のテンポ（ms）
-    const DEMO_TEMPO_MS = 520;
+/* ========= 音 ========= */
+function play(freq) {
+  initAudio();
+  const o = audioContext.createOscillator();
+  const g = audioContext.createGain();
+  o.type = 'sine';
+  o.frequency.value = freq;
+  g.gain.setValueAtTime(0.4, audioContext.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1);
+  o.connect(g).connect(audioContext.destination);
+  o.start();
+  o.stop(audioContext.currentTime + 1);
+}
 
-    function initAudio() {
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+/* ========= UI ========= */
+function createBells() {
+  const c = document.getElementById('bellsContainer');
+  c.innerHTML = '';
+  notes.forEach(n=>{
+    const d = document.createElement('div');
+    d.className = 'bell';
+    d.innerHTML = `<div class="bell-shape">${n.note}</div>`;
+    const s = d.querySelector('.bell-shape');
+    bells[n.note] = s;
+    d.onclick = ()=>{
+      if(mode==='demo') return;
+      if(mode!=='free' && n.note!==twinkle[index]) return;
+      play(n.freq);
+      if(mode!=='free'){
+        index++;
+        highlight();
       }
-      if (audioContext.state === 'suspended') {
-        audioContext.resume();
-      }
-    }
+    };
+    c.appendChild(d);
+  });
+}
 
-    function playBellSound(frequency) {
-      initAudio();
-
-      const osc = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(frequency, audioContext.currentTime);
-
-      gain.gain.setValueAtTime(0.28, audioContext.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.2);
-
-      osc.connect(gain);
-      gain.connect(audioContext.destination);
-
-      osc.start(audioContext.currentTime);
-      osc.stop(audioContext.currentTime + 1.2);
-    }
-
-    function adjustBrightness(hex, percent) {
-      const num = parseInt(hex.replace('#', ''), 16);
-      const r = Math.min(255, Math.floor((num >> 16) * percent));
-      const g = Math.min(255, Math.floor(((num >> 8) & 0x00FF) * percent));
-      const b = Math.min(255, Math.floor((num & 0x0000FF) * percent));
-      return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
-    }
-
-    function stopAutoplay() {
-      if (autoplayTimer) clearTimeout(autoplayTimer);
-      autoplayTimer = null;
-      isAutoplay = false;
-      autoplayIndex = 0;
-    }
-
-    function clearHighlights() {
-      Object.values(bellElements).forEach(el => el.classList.remove('highlight'));
-    }
-
-    function ringVisual(note) {
-      const el = bellElements[note];
-      if (!el) return;
-      el.classList.add('ringing');
-      setTimeout(() => el.classList.remove('ringing'), 240);
-    }
-
-    function highlightNote(note) {
-      clearHighlights();
-      if (bellElements[note]) bellElements[note].classList.add('highlight');
-    }
-
-    function updatePracticeInfo(text) {
-      const info = document.getElementById('practiceInfo');
-      info.textContent = text;
-    }
-
-    // ===== 練習（待ちつき） =====
-    function startPractice() {
-      stopAutoplay();
-      practiceMode = true;
-      currentNoteIndex = 0;
-
-      document.getElementById('practiceInfo').style.display = 'block';
-      document.getElementById('freeMode').classList.remove('active');
-      document.getElementById('practiceMode').classList.add('active');
-
-      showNextPracticeNote();
-    }
-
-    function showNextPracticeNote() {
-      if (!practiceMode) return;
-
-      if (currentNoteIndex >= twinkleSong.length) {
-        clearHighlights();
-        updatePracticeInfo('🎉 完璧！きらきら星をマスターしました！');
-        // ちょい待って最初に戻す
-        setTimeout(() => {
-          if (!practiceMode) return;
-          currentNoteIndex = 0;
-          showNextPracticeNote();
-        }, 1600);
-        return;
-      }
-
-      const next = twinkleSong[currentNoteIndex];
-      highlightNote(next);
-
-      updatePracticeInfo(`♪ ${currentNoteIndex + 1} / ${twinkleSong.length}　次：${next}（待ち時間あり）`);
-      // 待ち時間で子どもが準備できるように（押してもOK）
-      // 何もしなくても次に進めたい場合はここで自動で音を鳴らす等も可能だが、今回は「待つ」だけ
-      // ＝押すまで進まない設計
-    }
-
-    function checkPractice(playedNote) {
-      if (!practiceMode) return;
-
-      const expected = twinkleSong[currentNoteIndex];
-      if (playedNote !== expected) return;
-
-      // 正解：少しだけ余韻→次へ
-      clearHighlights();
-      currentNoteIndex++;
-      setTimeout(showNextPracticeNote, 260);
-    }
-
-    function setFreeMode() {
-      stopAutoplay();
-      practiceMode = false;
-      currentNoteIndex = 0;
-
-      document.getElementById('practiceInfo').style.display = 'none';
-      document.getElementById('freeMode').classList.add('active');
-      document.getElementById('practiceMode').classList.remove('active');
-      clearHighlights();
-    }
-
-    // ===== デモ/自動演奏（きらきら星） =====
-    function startDemo() {
-      stopAutoplay();
-      practiceMode = false;
-      document.getElementById('practiceInfo').style.display = 'block';
-      document.getElementById('freeMode').classList.remove('active');
-      document.getElementById('practiceMode').classList.remove('active');
-      updatePracticeInfo('🎵 デモ演奏中（きらきら星）');
-
-      isAutoplay = true;
-      autoplayIndex = 0;
-
-      const step = () => {
-        if (!isAutoplay) return;
-
-        if (autoplayIndex >= twinkleSong.length) {
-          isAutoplay = false;
-          clearHighlights();
-          updatePracticeInfo('✅ デモ演奏おわり');
-          return;
-        }
-
-        const n = twinkleSong[autoplayIndex];
-        highlightNote(n);
-
-        // 音を鳴らす
-        const noteObj = notes.find(x => x.note === n);
-        if (noteObj) {
-          ringVisual(n);
-          playBellSound(noteObj.frequency);
-        }
-
-        autoplayIndex++;
-        autoplayTimer = setTimeout(step, DEMO_TEMPO_MS);
-      };
-
-      step();
-    }
-
-    function stopAll() {
-      stopAutoplay();
-      clearHighlights();
-      updatePracticeInfo('');
-      document.getElementById('practiceInfo').style.display = practiceMode ? 'block' : 'none';
-    }
-
-    // ===== ベル生成（iPadで和音：pointerdown採用） =====
-    function createBells() {
-      const container = document.getElementById('bellsContainer');
-      container.innerHTML = '';
-      bellElements = {};
-
-      notes.forEach(({ note, frequency, label, color }) => {
-        const bell = document.createElement('div');
-        bell.className = 'bell';
-        bell.dataset.note = note;
-
-        const bright = adjustBrightness(color, 1.2);
-        bell.innerHTML = `
-          <div class="bell-body">
-            <div class="bell-top"></div>
-            <div class="bell-shape" style="background: linear-gradient(180deg, ${color} 0%, ${bright} 50%, ${color} 100%);">
-              <div class="bell-note">${note}</div>
-            </div>
-            <div class="bell-label">${label}</div>
-          </div>
-        `;
-
-        const bellShape = bell.querySelector('.bell-shape');
-        bellElements[note] = bellShape;
-
-        // クリックよりpointerイベントのほうが同時押しに強い
-        bell.addEventListener('pointerdown', (e) => {
-          e.preventDefault(); // スクロールやダブルタップ系抑止
-          bell.setPointerCapture?.(e.pointerId);
-
-          // 同じpointerで連打扱いにならないよう記録
-          activePointers.set(e.pointerId, note);
-
-          ringVisual(note);
-          playBellSound(frequency);
-
-          if (practiceMode) checkPractice(note);
-        }, { passive: false });
-
-        bell.addEventListener('pointerup', (e) => {
-          activePointers.delete(e.pointerId);
-        });
-
-        bell.addEventListener('pointercancel', (e) => {
-          activePointers.delete(e.pointerId);
-        });
-
-        container.appendChild(bell);
-      });
-    }
-
-    // ===== ボタン =====
-    document.getElementById('freeMode').addEventListener('click', () => {
-      setFreeMode();
+function highlight(){
+  Object.values(bells).forEach(b=>b.classList.remove('highlight','dimmed'));
+  if(index>=twinkle.length) return;
+  const n = twinkle[index];
+  bells[n].classList.add('highlight');
+  if(mode==='beginner'){
+    Object.keys(bells).forEach(k=>{
+      if(k!==n) bells[k].classList.add('dimmed');
     });
+  }
+}
 
-    document.getElementById('practiceMode').addEventListener('click', () => {
-      startPractice();
-    });
+/* ========= モード ========= */
+function setMode(m){
+  clearTimeout(timer);
+  mode = m;
+  index = 0;
+  document.querySelectorAll('.mode-button').forEach(b=>b.classList.remove('active'));
+  document.getElementById(m+'Mode').classList.add('active');
+  document.getElementById('practiceInfo').style.display = m==='free'?'none':'block';
+  highlight();
+  if(m==='demo') demo();
+}
 
-    document.getElementById('demoPlay').addEventListener('click', () => {
-      startDemo();
-    });
+function demo(){
+  if(index>=twinkle.length) return;
+  const n = twinkle[index];
+  play(notes.find(x=>x.note===n).freq);
+  bells[n].classList.add('highlight');
+  timer = setTimeout(()=>{
+    bells[n].classList.remove('highlight');
+    index++;
+    demo();
+  }, 800);
+}
 
-    document.getElementById('stopAll').addEventListener('click', () => {
-      stopAll();
-    });
+/* ========= ボタン ========= */
+freeMode.onclick=()=>setMode('free');
+demoMode.onclick=()=>setMode('demo');
+beginnerMode.onclick=()=>setMode('beginner');
+practiceMode.onclick=()=>setMode('practice');
 
-    // 初期表示
-    createBells();
-    setFreeMode();
-
-    // iOSで音が鳴らない対策：最初のタップでAudioContext起動
-    window.addEventListener('pointerdown', () => initAudio(), { once: true });
-  </script>
+/* ========= 起動 ========= */
+createBells();
+</script>
 </body>
 </html>
